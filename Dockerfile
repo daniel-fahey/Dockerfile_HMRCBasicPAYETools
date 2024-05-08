@@ -1,24 +1,7 @@
-FROM debian:sid-slim
+FROM debian:bookworm-20240423-slim
 
-ARG PAYETOOLS_VERSION="23.0.23065.113"
+ARG PAYETOOLS_VERSION="24.1.24086.542"
 
-#
-# Install the required libraries for Basic PAYE Tools. This list is taken from the linux instructions
-# at https://www.gov.uk/government/publications/getting-basic-paye-tools-working-on-linux/getting-basic-paye-tools-working-on-linux
-#
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install -y glib-2.0 libcomerr2 libfontconfig1 libfreetype6 \
-                          libgl1-mesa-glx libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
-                          libreadline8 libsqlite3-0 libstdc++6 libx11-6 \
-                          libxext6 libxrender1 libxt6 zlib1g libxslt1.1 libxml2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-
-#
-# Download and install the tools from HMRC's website. Perform full cleanup to limit image layer size.
-#
 RUN apt-get update \
     && apt-get install -y curl unzip \
     && cd /root/ \
@@ -30,19 +13,17 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y   libfontconfig1 libglib2.0-0 libsm6 libxrender1 \
+                            libxext6 libxt6 libgstreamer-plugins-base1.0-0 \
+                            libsqlite3-0 libgl1-mesa-glx xvfb \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-#
-# For X11 to work through the docker container, we need to tell it to show the screen on a display
-# on the host system.
-#
-ENV DISPLAY=host.docker.internal:0
-
-#
-# Avoid running the container as root, so create a new user for normal day to day stuff.
-# All of Basic PAYE Tools data will be stored in /home/paye_user/HMRC. Make sure you mount that
-# to a volume or host directory so that your data persists.
-#
 RUN useradd -g users -m paye_user
 USER paye_user
 
-ENTRYPOINT ["/opt/HMRC/payetools-rti/rti.linux"]
+EXPOSE 46729
+
+ENTRYPOINT ["/usr/bin/stdbuf", "-oL", "/usr/bin/xvfb-run", "--auto-servernum", "/opt/HMRC/payetools-rti/rti.linux"]

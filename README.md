@@ -9,11 +9,26 @@ unofficial.**
 
 ## TL;DR
 ```
-docker run --rm -d -v /some/directory/:/home/paye_user/HMRC markgrimes/payetools-rti
+$ podman run --init --replace --name paye -p 46729:46729 -v persist:/home/paye_user/HMRC knowthydata/payetools-rti
+0 inaccessible rows before starting
+0 SubmissionDirtyData models to inspect
+0 of 0 stale submissions for 2018 and earlier
+0 EmployerPCD to inspect
+0 inaccessible rows after employer delete
+0 EmployerPCD to remain
+No systemtrayicon available
+Validating models...
+
+0 errors found
+May 08, 2024 - 16:17:14
+Django version 1.6, using settings 'mysite.settings'
+Starting development server at http://127.0.0.1:46729/
+Quit the server with CONTROL-C.
+# to quit (in another terminal):
+$ podman stop paye
 ```
-Will run an ephemeral container that saves all data to `/some/directory/` on your host system. If
-you start the container again with that command it will read the previously saved data from that
-directory.
+Will run an ephemeral container that saves all data to the `persist` directly where you run the above command on your host system.
+If you start the container again with that command it will read the previously saved data from that directory.
 
 ## About
 HMRC is the UK government's tax office. They provide software for reporting PAYE (Pay As You Earn)
@@ -24,37 +39,6 @@ builds for Windows, Mac and Linux so you might prefer to just install directly o
 The Basic PAYE Tools are pretty basic, make sure this is what you want before using it. There are
 plenty of other software packages you can use (free and paid). There is a link from the tools'
 homepage (above) to other options.
-
-## Using X11 in a docker container
-
-The tools use a Qt interface over X11. To use this in a docker container you must have an X server
-running on your host machine.
-
-The container has `DISPLAY` set to `host.docker.internal:0` which should make the connection appear
-as though it is coming from `localhost`.
-
-### Mac OS X
-
-Install XQuartz. Start it, go to Preferences->Security and make sure "Allow connections from network
-clients" is checked.
-
-By default all network clients are blocked, so you need to whitelist the ones you want. Open a terminal
-and type `xhost +localhost` to allow connections from docker containers. You will have to do this
-every time you start XQuartz.
-
-### Linux
-
-It's generally easier to just share the X11 socket directly into the container. When you start the
-container add `-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix`.
-
-I've not tested this but I've been told that on Ubuntu 20.04 the application will launch but the window
-is empty. To fix this try setting the environment variable `QT_GRAPHICSSYSTEM=native`.
-
-### Windows
-
-You need an X server, e.g. [Xming](http://www.straightrunning.com/XmingNotes/). I haven't connected
-up to a docker container in a very long time, but I think it should be straight forward. Instructions
-to come when I've tested it.
 
 ## Persisting your data
 
